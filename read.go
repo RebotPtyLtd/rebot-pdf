@@ -157,6 +157,10 @@ func NewReaderEncrypted(f io.ReaderAt, size int64, pw func() string) (*Reader, e
 	if token != keyword("startxref") {
 		return nil, fmt.Errorf("malformed PDF file: missing startxref")
 	}
+	token, err = b.readToken()
+	if err != nil {
+		return nil, err
+	}
 	startxref, ok := token.(int64)
 	if !ok {
 		return nil, fmt.Errorf("malformed PDF file: startxref not followed by integer")
