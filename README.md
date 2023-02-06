@@ -22,7 +22,7 @@ import (
 	"bytes"
 	"fmt"
 
-	"github.com/RebotPtyLtd/rebot-pdf"
+	pdf "github.com/RebotPtyLtd/rebot-pdf"
 )
 
 func main() {
@@ -94,7 +94,7 @@ import (
 	"fmt"
 	"os"
 
-	"github.com/RebotPtyLtd/rebot-pdf"
+	pdf "github.com/RebotPtyLtd/rebot-pdf"
 )
 
 func main() {
