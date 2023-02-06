@@ -141,6 +141,42 @@ func (r *Reader) GetPlainText() (reader io.Reader, err error) {
 	return &buf, nil
 }
 
+// GetSinglePagePlainText returns all the text in the PDF file for a single page
+func (r *Reader) GetSinglePagePlainText(page int) (reader io.Reader, err error) {
+	pages, err := r.NumPage()
+	if err != nil {
+		return nil, err
+	}
+	var buf bytes.Buffer
+	fonts := make(map[string]*Font)
+	if page > pages {
+		return &bytes.Buffer{}, fmt.Errorf("requested page %d is not present in pdf", page)
+	}
+	p, err := r.Page(page)
+	if err != nil {
+		return nil, err
+	}
+	pfonts, err := p.Fonts()
+	if err != nil {
+		return nil, err
+	}
+	for _, name := range pfonts { // cache fonts so we don't continually parse charmap
+		if _, ok := fonts[name]; !ok {
+			f, err := p.Font(name)
+			if err != nil {
+				return nil, err
+			}
+			fonts[name] = &f
+		}
+	}
+	text, err := p.GetPlainText(fonts)
+	if err != nil {
+		return &bytes.Buffer{}, err
+	}
+	buf.WriteString(text)
+	return &buf, nil
+}
+
 func (p Page) findInherited(key string) (Value, error) {
 	for v := p.V; !v.IsNull(); v = getParent(v) {
 		parentKey, err := v.Key(key)
