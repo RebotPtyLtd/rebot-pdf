@@ -5,6 +5,7 @@
 package pdf
 
 import (
+	"context"
 	"fmt"
 	"io"
 )
@@ -51,7 +52,10 @@ func newDict() Value {
 //
 // There is no support for executable blocks, among other limitations.
 //
-func Interpret(strm Value, do func(stk *Stack, op string) error) error {
+func Interpret(ctx context.Context, strm Value, do func(stk *Stack, op string) error) error {
+	if ctx.Err() != nil {
+		return ctx.Err()
+	}
 	rd, err := strm.Reader()
 	if err != nil {
 		return err
@@ -64,6 +68,9 @@ func Interpret(strm Value, do func(stk *Stack, op string) error) error {
 	var dicts []dict
 Reading:
 	for {
+		if ctx.Err() != nil {
+			return ctx.Err()
+		}
 		tok, err := b.readToken()
 		if err != nil {
 			return err
