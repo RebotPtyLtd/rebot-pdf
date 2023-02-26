@@ -23,7 +23,10 @@ type Page struct {
 // Page returns the page for the given page number.
 // Page numbers are indexed starting at 1, not 0.
 // If the page is not found, Page returns a Page with p.V.IsNull().
-func (r *Reader) Page(num int) (Page, error) {
+func (r *Reader) Page(ctx context.Context, num int) (Page, error) {
+	if ctx.Err() != nil {
+		return Page{}, ctx.Err()
+	}
 	num-- // now 0-indexed
 	trailRoot, err := r.Trailer().Key("Root")
 	if err != nil {
@@ -35,6 +38,9 @@ func (r *Reader) Page(num int) (Page, error) {
 	}
 Search:
 	for isPagesType(page) {
+		if ctx.Err() != nil {
+			return Page{}, ctx.Err()
+		}
 		pageCount, err := page.Key("Count")
 		if err != nil {
 			return Page{}, err
@@ -118,7 +124,7 @@ func (r *Reader) GetPlainText(ctx context.Context) (reader io.Reader, err error)
 	var buf bytes.Buffer
 	fonts := make(map[string]*Font)
 	for i := 1; i <= pages; i++ {
-		p, err := r.Page(i)
+		p, err := r.Page(ctx, i)
 		if err != nil {
 			return nil, err
 		}
@@ -159,7 +165,7 @@ func (r *Reader) GetSinglePagePlainText(ctx context.Context, page int) (reader i
 	if page > pages {
 		return &bytes.Buffer{}, fmt.Errorf("requested page %d is not present in pdf", page)
 	}
-	p, err := r.Page(page)
+	p, err := r.Page(ctx, page)
 	if err != nil {
 		return nil, err
 	}
